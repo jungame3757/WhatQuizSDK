@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Proyecto26;
+using UnityEngine;
+using FullSerializer;
 
 namespace FirebaseWebGL.Scripts.FirebaseBridge
 {
     public static class FirebaseFunctions
     {
+        private static readonly fsSerializer _serializer = new fsSerializer();
+        
         /// <summary>
         /// Calls an HTTP Firebase cloud function
         /// Returns the response of the request 
@@ -20,15 +24,28 @@ namespace FirebaseWebGL.Scripts.FirebaseBridge
             Action<Exception> fallback)
         {
             var projectId = GetCurrentProjectId();
+            
+            // Dictionary를 fsData로 변환
+            Dictionary<string, fsData> fsDataDict = new Dictionary<string, fsData>();
+            foreach (var kvp in parameters)
+            {
+                fsDataDict[kvp.Key] = new fsData(kvp.Value);
+            }
+            
+            // fsData를 JSON 문자열로 변환
+            string jsonBody = fsJsonPrinter.CompressedJson(new fsData(fsDataDict));
+            Debug.Log("요청 데이터: " + jsonBody);
+            
             RestClient.Request(new RequestHelper
             {
                 Method = "POST",
-                Uri = $"https://us-central1-{projectId}.cloudfunctions.net/{functionName}",
+                Uri = $"https://auth-zuwrenkajq-du.a.run.app/{functionName}",
                 Headers = new Dictionary<string, string>
                 {
-                    {"Access-Control-Allow-Origin", "*"}
+                    {"Access-Control-Allow-Origin", "*"},
+                    {"Content-Type", "application/json"}
                 },
-                Params = parameters
+                BodyString = jsonBody
             }).Then(callback).Catch(fallback);
         }
 

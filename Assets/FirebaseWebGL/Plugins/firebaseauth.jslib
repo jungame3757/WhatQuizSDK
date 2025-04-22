@@ -93,20 +93,34 @@ mergeInto(LibraryManager.library, {
         }
     },
 
-    SignInWithCustomToken: function (token, objectName, callback, fallback) {
+    SignInWithToken: function (token, objectName, callback, fallback) {
         var parsedToken = UTF8ToString(token);
         var parsedObjectName = UTF8ToString(objectName);
         var parsedCallback = UTF8ToString(callback);
         var parsedFallback = UTF8ToString(fallback);
 
         try {
-            firebase.auth().signInWithCustomToken(parsedToken).then(function (result) {
-                window.unityInstance.SendMessage(parsedObjectName, parsedCallback, "Success: signed in with custom token!");
+            // ID 토큰을 사용하는 방식으로 변경
+            console.log("SignInWithToken 호출됨, 토큰 길이:", parsedToken.length);
+            
+            // 제공된 토큰을 ID 토큰으로 간주하고 로그인 시도
+            firebase.auth().signInWithCredential(
+                firebase.auth.GoogleAuthProvider.credential(null, parsedToken)
+            ).then(function (userCredential) {
+                window.unityInstance.SendMessage(parsedObjectName, parsedCallback, "Success: signed in with ID token for user " + userCredential.user.uid);
             }).catch(function (error) {
-                window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify(error, Object.getOwnPropertyNames(error)));
+                console.log("signInWithCredential 실패:", error.message);
+                
+                // 대체 방법: ID 토큰으로 인증
+                firebase.auth().signInWithCustomToken(parsedToken).then(function (userCredential) {
+                    window.unityInstance.SendMessage(parsedObjectName, parsedCallback, "Success: signed in with custom token for user " + userCredential.user.uid);
+                }).catch(function (error2) {
+                    console.log("signInWithCustomToken 실패:", error2.message);
+                    window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify(error2, Object.getOwnPropertyNames(error2)));
+                });
             });
-
         } catch (error) {
+            console.log("SignInWithToken 예외 발생:", error.message);
             window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify(error, Object.getOwnPropertyNames(error)));
         }
     },
@@ -123,30 +137,5 @@ mergeInto(LibraryManager.library, {
                 window.unityInstance.SendMessage(parsedObjectName, parsedOnUserSignedOut, "User signed out");
             }
         });
-    },
-    
-    GetIdToken: function (forceRefresh, objectName, callback, fallback) {
-        var parsedForceRefresh = forceRefresh;
-        var parsedObjectName = UTF8ToString(objectName);
-        var parsedCallback = UTF8ToString(callback);
-        var parsedFallback = UTF8ToString(fallback);
-
-        try {
-            var user = firebase.auth().currentUser;
-            if (user) {
-                user.getIdToken(parsedForceRefresh).then(function(idToken) {
-                    window.unityInstance.SendMessage(parsedObjectName, parsedCallback, idToken);
-                }).catch(function(error) {
-                    window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify(error, Object.getOwnPropertyNames(error)));
-                });
-            } else {
-                window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify({
-                    code: "auth/no-current-user",
-                    message: "No user is currently signed in."
-                }));
-            }
-        } catch (error) {
-            window.unityInstance.SendMessage(parsedObjectName, parsedFallback, JSON.stringify(error, Object.getOwnPropertyNames(error)));
-        }
     }
 });

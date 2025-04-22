@@ -58,14 +58,14 @@ namespace FirebaseWebGL.Scripts.FirebaseBridge
             string fallback);
         
         /// <summary>
-        /// Signs in a user with custom token
+        /// Signs in a user with custom authentication token
         /// </summary>
-        /// <param name="token"> Custom authentication token </param>
+        /// <param name="token"> Firebase authentication token </param>
         /// <param name="objectName"> Name of the gameobject to call the callback/fallback of </param>
         /// <param name="callback"> Name of the method to call when the operation was successful. Method must have signature: void Method(string output) </param>
         /// <param name="fallback"> Name of the method to call when the operation was unsuccessful. Method must have signature: void Method(string output). Will return a serialized FirebaseError object </param>
         [DllImport("__Internal")]
-        public static extern void SignInWithCustomToken(string token, string objectName, string callback,
+        public static extern void SignInWithToken(string token, string objectName, string callback,
             string fallback);
         
         /// <summary>
@@ -77,15 +77,12 @@ namespace FirebaseWebGL.Scripts.FirebaseBridge
         [DllImport("__Internal")]
         public static extern void OnAuthStateChanged(string objectName, string onUserSignedIn,
             string onUserSignedOut);
-            
+
         /// <summary>
-        /// Gets the ID token of the currently signed in user
+        /// 현재 창에서 URL을 열기
         /// </summary>
-        /// <param name="forceRefresh"> Whether to force refresh the token or use cached token if available </param>
-        /// <param name="objectName"> Name of the gameobject to call the callback/fallback of </param>
-        /// <param name="callback"> Name of the method to call when the operation was successful. Method must have signature: void Method(string output). Will return the ID token string </param>
-        /// <param name="fallback"> Name of the method to call when the operation was unsuccessful. Method must have signature: void Method(string output). Will return a serialized FirebaseError object </param>
+        /// <param name="url">열려는 URL</param>
         [DllImport("__Internal")]
-        public static extern void GetIdToken(bool forceRefresh, string objectName, string callback, string fallback);
+        public static extern void OpenURLInSameWindow(string url);
     }
 }

@@ -23,5 +23,15 @@ namespace FirebaseWebGL.Scripts.Objects
         public string providerId;
         
         public string uid;
+        
+        public STSTokenManager stsTokenManager;
+    }
+    
+    [Serializable]
+    public class STSTokenManager
+    {
+        public string refreshToken;
+        public string accessToken;
+        public long expirationTime;
     }
 }
