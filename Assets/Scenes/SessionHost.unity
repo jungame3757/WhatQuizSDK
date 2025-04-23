@@ -9423,6 +9423,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1737262150}
   - component: {fileID: 1737262151}
+  - component: {fileID: 1737262152}
   m_Layer: 5
   m_Name: PlayerIcon
   m_TagString: Untagged
@@ -9497,6 +9498,20 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!114 &1737262152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1737262149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c8eac6ea40979445b7646bc8f1fcb10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerNameText: {fileID: 1403413980}
+  _kickButton: {fileID: 1149529743}
 --- !u!1 &1811470496
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@ using FullSerializer;
 using System.Collections;
 
 namespace Firebase{
-    public class SessionManager : MonoBehaviour
+    public class HostSessionManager : MonoBehaviour
     {
         public SessionData LocalSessionData => _localSessionData;
         private SessionData _localSessionData;
@@ -24,6 +24,7 @@ namespace Firebase{
         public event Action<List<Player>> OnPlayersChanged;
         public event Action<string> OnSessionStatusChanged;
         public event Action<string> OnGameStatusChanged;
+        public event Action<string> OnPlayerKicked; // 플레이어 강퇴 이벤트 추가
         
         private void Awake()
         {
@@ -46,9 +47,9 @@ namespace Firebase{
         {
             // 인증 토큰 가져오기
             string token = null;
-            if (AuthManager.Instance != null)
+            if (HostAuthManager.Instance != null)
             {
-                token = AuthManager.Instance.GetIdToken();
+                token = HostAuthManager.Instance.GetIdToken();
             }
             
             if (string.IsNullOrEmpty(token))
@@ -165,15 +166,26 @@ namespace Firebase{
             try
             {
                 fsData fsData = fsJsonParser.Parse(data);
-                List<Player> players = null;
-                _serializer.TryDeserialize(fsData, ref players);
+                Debug.Log("플레이어 데이터 역직렬화 결과: " + fsData);
+
+                // Dictionary<string, Player>로 먼저 역직렬화
+                Dictionary<string, Player> playerDict = null;
+                _serializer.TryDeserialize(fsData, ref playerDict);
                 
-                if (players != null)
+                Debug.Log("플레이어 데이터 역직렬화 결과: " + playerDict);
+
+                if (playerDict != null)
                 {
-                    _localSessionData.players = players;
-                    // 플레이어 관련 UI 업데이트나 게임 로직 처리
+                    // Dictionary 값들을 List<Player>로 변환
+                    List<Player> players = new List<Player>(playerDict.Values);
+                    
                     Debug.Log($"플레이어 수: {players.Count}");
+                    _localSessionData.players = players;
                     OnPlayersChanged?.Invoke(players);
+                }
+                else
+                {
+                    Debug.LogError("플레이어 사전 역직렬화 실패");
                 }
             }
             catch (Exception ex)
@@ -252,6 +264,59 @@ namespace Firebase{
         public void OnListenerRemoved(string data)
         {
             Debug.Log("리스너 제거됨: " + data);
+        }
+        
+        /// <summary>
+        /// 플레이어를 세션에서 강퇴합니다.
+        /// </summary>
+        /// <param name="playerId">강퇴할 플레이어 ID</param>
+        public void KickPlayer(string playerId)
+        {
+            if (string.IsNullOrEmpty(_sessionCode) || string.IsNullOrEmpty(playerId))
+            {
+                Debug.LogError("세션 코드 또는 플레이어 ID가 비어있습니다.");
+                OnError?.Invoke("세션 코드 또는 플레이어 ID가 비어있습니다.");
+                return;
+            }
+            
+            // 인증 토큰 가져오기
+            string token = null;
+            if (HostAuthManager.Instance != null)
+            {
+                token = HostAuthManager.Instance.GetIdToken();
+            }
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                Debug.LogError("인증 토큰이 없습니다. 로그인이 필요합니다.");
+                OnError?.Invoke("인증 토큰이 없습니다. 로그인이 필요합니다.");
+                return;
+            }
+            
+            // 플레이어 데이터 삭제
+            string playerPath = $"sessionCodes/{_sessionCode}/players/{playerId}";
+            FirebaseDatabase.DeleteJSON(playerPath, gameObject.name, "OnPlayerDeleteSuccess", "OnKickPlayerError");
+        }
+        
+        /// <summary>
+        /// 플레이어 데이터 삭제 성공 콜백
+        /// </summary>
+        public void OnPlayerDeleteSuccess(string response)
+        {
+            Debug.Log("플레이어 데이터 삭제 성공: " + response);
+            
+            // UI에 알림 표시
+            UI.UISystem.DebugManager.Instance.ShowMassage("알림", "플레이어가 강퇴되었습니다.", null, null);
+        }
+        
+        /// <summary>
+        /// 강퇴 과정에서 오류 발생 콜백
+        /// </summary>
+        public void OnKickPlayerError(string error)
+        {
+            Debug.LogError("플레이어 강퇴 과정에서 오류 발생: " + error);
+            OnError?.Invoke("플레이어 강퇴에 실패했습니다: " + error);
+            UI.UISystem.DebugManager.Instance.ShowMassage("오류", "플레이어 강퇴에 실패했습니다.", null, null);
         }
         
         #endregion

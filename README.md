@@ -1,182 +1,165 @@
-# FirebaseWebGL
+# WhatQuiz SDK
 
-Unity WebGL 환경에서 Firebase 서비스를 쉽게 사용할 수 있는 플러그인입니다.
+실시간 퀴즈 게임을 쉽게 구현할 수 있는 Unity용 SDK입니다. Firebase 기반 멀티플레이어 세션 관리 시스템을 통해 호스트와 클라이언트 간의 원활한 통신을 지원합니다.
 
-## 목차
+## 특징
 
-- [소개](#소개)
-- [설치 방법](#설치-방법)
-- [구조](#구조)
-- [주요 모듈](#주요-모듈)
-  - [FirebaseAuth](#firebaseauth)
-  - [URL](#url)
-- [콜백 시스템](#콜백-시스템)
-- [사용 예제](#사용-예제)
-- [주의사항](#주의사항)
-- [에러 처리](#에러-처리)
+- Firebase Realtime Database를 활용한 실시간 세션 관리
+- 호스트-클라이언트 구조의 멀티플레이어 시스템
+- 플레이어 참가/퇴장 자동 관리
+- 다양한 게임 모드 지원 (시간제한, 점수제한)
+- QR 코드 기반 세션 초대 시스템
+- 플레이어 강퇴 기능
 
-## 소개
+## 시작하기
 
-FirebaseWebGL은 Unity WebGL 빌드에서 Firebase의 다양한 기능(인증, 데이터베이스, 스토리지 등)을 쉽게 활용할 수 있게 해주는 플러그인입니다. JavaScript와 C# 사이의 원활한 통신을 지원하여 Unity 게임에서 Firebase 서비스를 사용할 수 있습니다.
+### 필수 조건
 
-## 설치 방법
+- Unity 2020.3 이상
+- Firebase Unity SDK (Realtime Database, Authentication)
+- TextMesh Pro
 
-1. FirebaseWebGL 패키지를 Unity 프로젝트의 Assets 폴더에 복사합니다.
-2. Firebase 프로젝트를 설정하고 필요한 구성 파일을 연결합니다.
-3. 초기화 스크립트를 통해 Firebase를 초기화합니다.
+### 설치
 
-## 구조
+1. 이 저장소를 클론하거나 다운로드합니다.
+2. Firebase 프로젝트를 생성하고 Unity 프로젝트에 연결합니다.
+3. `Assets/Scripts/Firebase` 폴더의 스크립트를 프로젝트에 추가합니다.
+4. `Assets/Scripts/UI/Session` 폴더의 UI 스크립트를 필요에 따라 추가합니다.
 
-```
-FirebaseWebGL/
-├── Plugins/            - JavaScript 연동 파일
-│   ├── firebaseauth.jslib
-│   ├── firebasedatabase.jslib
-│   ├── firebasefirestore.jslib
-│   ├── firebasestorage.jslib
-│   └── url.jslib
-├── Scripts/            - C# 스크립트
-│   └── FirebaseBridge/ - Firebase 기능 인터페이스
-│       ├── FirebaseAuth.cs
-│       ├── FirebaseDatabase.cs
-│       ├── FirebaseFirestore.cs
-│       ├── FirebaseStorage.cs
-│       └── URL.cs
-└── Examples/           - 사용 예제
-```
+## 기본 사용법
 
-## 주요 모듈
+### 호스트 측 사용법
 
-### FirebaseAuth
-
-사용자 인증 관련 기능을 제공합니다.
+1. 씬에 `HostAuthManager`와 `HostSessionManager` 컴포넌트가 있는 GameObject를 추가합니다.
+2. UI는 `HostSessionUIManager`를 참조하여 구현합니다.
+3. 세션 생성 시 `GameSettingData`를 설정합니다.
 
 ```csharp
-// 익명 로그인
-FirebaseAuth.SignInAnonymously(gameObject.name, "성공콜백", "실패콜백");
-
-// 이메일/비밀번호 로그인
-FirebaseAuth.SignInWithEmailAndPassword("이메일", "비밀번호", gameObject.name, "성공콜백", "실패콜백");
-
-// 이메일/비밀번호로 계정 생성
-FirebaseAuth.CreateUserWithEmailAndPassword("이메일", "비밀번호", gameObject.name, "성공콜백", "실패콜백");
-
-// 소셜 로그인
-FirebaseAuth.SignInWithGoogle(gameObject.name, "성공콜백", "실패콜백");
-FirebaseAuth.SignInWithFacebook(gameObject.name, "성공콜백", "실패콜백");
-
-// 커스텀 토큰 로그인
-FirebaseAuth.SignInWithCustomToken("토큰", gameObject.name, "성공콜백", "실패콜백");
-
-// 인증 상태 변경 감지
-FirebaseAuth.OnAuthStateChanged(gameObject.name, "로그인콜백", "로그아웃콜백");
-
-// ID 토큰 가져오기
-FirebaseAuth.GetIdToken(새로고침여부, gameObject.name, "성공콜백", "실패콜백");
-```
-
-### URL
-
-URL 및 외부 웹 페이지 접근 기능을 제공합니다.
-
-```csharp
-// 단순 URL 열기
-URL.OpenURL("https://example.com");
-
-// 인증 토큰과 함께 URL 열기
-URL.OpenUrlWithToken("https://example.com", "인증토큰");
-```
-
-## 콜백 시스템
-
-FirebaseWebGL은 비동기 작업을 처리하기 위해 콜백 메서드를 사용합니다:
-
-```csharp
-// 성공 콜백 예시
-public void OnSuccess(string result) {
-    Debug.Log("성공: " + result);
-}
-
-// 실패 콜백 예시
-public void OnError(string error) {
-    try {
-        var parsedError = StringSerializationAPI.Deserialize(typeof(FirebaseError), error) as FirebaseError;
-        Debug.LogError("오류: " + parsedError.message);
-    } catch {
-        Debug.LogError("오류: " + error);
-    }
-}
-```
-
-## 사용 예제
-
-### 인증 토큰 활용 예시
-
-```csharp
-using FirebaseWebGL.Scripts.FirebaseBridge;
-using FirebaseWebGL.Scripts.Objects;
-using UnityEngine;
-
-public class AuthExample : MonoBehaviour
+// 게임 설정 구성
+GameSettingData gameSettings = new GameSettingData
 {
-    [SerializeField] private string externalUrl = "https://your-api.com";
+    gameMode = "time",        // "time" 또는 "score"
+    timeLimit = 5,            // 시간제한 (분)
+    scoreLimit = 100,         // 점수제한
+    questionCount = 10        // 질문 수
+};
 
-    public void Login() {
-        FirebaseAuth.SignInWithEmailAndPassword(
-            "user@example.com", 
-            "password", 
-            gameObject.name, 
-            "OnLoginSuccess", 
-            "OnLoginError"
-        );
-    }
-
-    public void OnLoginSuccess(string result) {
-        Debug.Log("로그인 성공");
-        FirebaseAuth.GetIdToken(false, gameObject.name, "SendTokenToAPI", "OnLoginError");
-    }
-    
-    public void SendTokenToAPI(string token) {
-        URL.OpenUrlWithToken(externalUrl, token);
-        // 또는 UnityWebRequest로 API 요청 시 헤더에 토큰 추가
-    }
-    
-    public void OnLoginError(string error) {
-        Debug.LogError("로그인 실패: " + error);
-    }
-}
+// 세션 생성
+hostSessionManager.CreateSession(gameSettings);
 ```
+
+4. 이벤트 핸들러를 등록하여 세션 상태 변화를 처리합니다.
+
+```csharp
+// 이벤트 등록
+hostSessionManager.OnSessionCreated += OnSessionCreated;
+hostSessionManager.OnPlayersChanged += OnPlayersChanged;
+hostSessionManager.OnSessionStatusChanged += OnSessionStatusChanged;
+hostSessionManager.OnGameStatusChanged += OnGameStatusChanged;
+```
+
+5. 플레이어 강퇴는 다음과 같이 처리합니다.
+
+```csharp
+// 플레이어 강퇴
+hostSessionManager.KickPlayer(playerId);
+```
+
+### 클라이언트 측 사용법
+
+1. 씬에 `ClientAuthManager`와 `ClientSessionManager` 컴포넌트가 있는 GameObject를 추가합니다.
+2. UI는 `ClientSessionUIManager`를 참조하여 구현합니다.
+3. 세션 참가시 세션 코드와 플레이어 이름이 필요합니다.
+
+```csharp
+// 세션 코드와 플레이어 이름으로 참가
+clientSessionManager.JoinSession(sessionCode, playerName);
+```
+
+4. 이벤트 핸들러를 등록하여 세션 상태 변화를 처리합니다.
+
+```csharp
+// 이벤트 등록
+clientSessionManager.OnSessionJoined += OnSessionJoined;
+clientSessionManager.OnPlayersChanged += OnPlayersChanged;
+clientSessionManager.OnSessionStatusChanged += OnSessionStatusChanged;
+clientSessionManager.OnGameStatusChanged += OnGameStatusChanged;
+clientSessionManager.OnPlayerKicked += OnPlayerKicked;
+```
+
+## 주요 클래스 및 기능
+
+### 공통
+
+- `SessionData`: 세션 정보를 포함하는 클래스
+- `Player`: 플레이어 정보를 포함하는 클래스
+- `GameSettingData`: 게임 설정 정보를 포함하는 클래스
+
+### 호스트 측
+
+- `HostAuthManager`: 호스트 인증 관리
+- `HostSessionManager`: 호스트 세션 생성 및 관리
+  - `CreateSession(GameSettingData)`: 새 세션 생성
+  - `KickPlayer(playerId)`: 플레이어 강퇴
+- `HostSessionUIManager`: 호스트 UI 관리
+
+### 클라이언트 측
+
+- `ClientAuthManager`: 클라이언트 인증 관리
+- `ClientSessionManager`: 클라이언트 세션 참가 및 관리
+  - `JoinSession(sessionCode, playerName)`: 세션 참가
+  - `LeaveSession()`: 세션 나가기
+  - `RedirectToHome()`: 메인 페이지로 이동
+- `ClientSessionUIManager`: 클라이언트 UI 관리
+
+## 이벤트 시스템
+
+### HostSessionManager 이벤트
+
+- `OnSessionCreated`: 세션 생성 시 발생
+- `OnPlayersChanged`: 플레이어 목록 변경 시 발생
+- `OnSessionStatusChanged`: 세션 상태 변경 시 발생
+- `OnGameStatusChanged`: 게임 상태 변경 시 발생
+- `OnError`: 오류 발생 시 발생
+
+### ClientSessionManager 이벤트
+
+- `OnSessionJoined`: 세션 참가 시 발생
+- `OnPlayersChanged`: 플레이어 목록 변경 시 발생
+- `OnSessionStatusChanged`: 세션 상태 변경 시 발생
+- `OnGameStatusChanged`: 게임 상태 변경 시 발생
+- `OnPlayerKicked`: 플레이어 강퇴 시 발생
+- `OnError`: 오류 발생 시 발생
 
 ## 주의사항
 
-> ⚠️ 다음 사항들을 꼭 유의해주세요:
+1. Firebase 프로젝트 설정을 올바르게 구성해야 합니다.
+2. 호스트와 클라이언트 모두 인증이 필요합니다.
+3. 세션 코드는 URL 매개변수로 전달해야 합니다. 예: `https://yourdomain.com/?code=ABC123`
+4. 플레이어 강퇴 시 데이터베이스에서 플레이어 데이터가 삭제되며, 강퇴된 플레이어는 세션에 다시 참가할 수 있습니다.
 
-1. **WebGL 전용**: 모든 함수는 WebGL 빌드에서만 작동합니다
-2. **테스트 방법**: Editor에서는 오류가 발생할 수 있으므로 다음과 같이 조건부 로직을 사용하세요:
-   ```csharp
-   if (Application.platform == RuntimePlatform.WebGLPlayer) {
-       // Firebase 관련 코드
-   }
-   ```
-3. **콜백 함수**: 모든 콜백 함수는 `public`으로 선언해야 합니다
-4. **초기화**: 실제 Firebase 프로젝트 설정 및 초기화가 필요합니다
+## Firebase 데이터베이스 구조
 
-## 에러 처리
-
-오류 처리를 위한 표준 패턴:
-
-```csharp
-public void DisplayErrorObject(string error) {
-    try {
-        var parsedError = StringSerializationAPI.Deserialize(typeof(FirebaseError), error) as FirebaseError;
-        Debug.LogError(parsedError.message);
-    }
-    catch {
-        Debug.LogError(error);
-    }
-}
+```
+/sessionCodes
+  /[sessionCode]
+    /gameStatus: "waiting"|"playing"|"finished"
+    /sessionStatus: "waiting"|"playing"|"finished"
+    /hostId: "host_user_id"
+    /expiresAt: timestamp
+    /gameSetting
+      /gameMode: "time"|"score"
+      /timeLimit: number
+      /scoreLimit: number
+      /questionCount: number
+    /players
+      /[playerId]
+        /id: "player_id"
+        /name: "player_name"
+        /isReady: boolean
+        /score: number
 ```
 
----
+## 라이센스
 
-© 2023 FirebaseWebGL. 이 플러그인을 활용하여 Unity WebGL 게임에서 Firebase 서비스를 쉽게 사용하세요! 
+이 프로젝트는 MIT 라이센스로 배포됩니다. 자세한 내용은 LICENSE 파일을 참조하세요. 

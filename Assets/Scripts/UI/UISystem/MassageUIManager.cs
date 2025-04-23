@@ -4,7 +4,8 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.System{
+namespace UI.UISystem
+{
     public class MassageUIManager : MonoBehaviour
     {
         [SerializeField] private TMP_Text _messageTitle;
@@ -20,7 +21,10 @@ namespace UI.System{
             _messageContent.text = message;
 
             if(onOk != null)
+            {
                 _okButton.onClick.AddListener(() => onOk?.Invoke());
+                _okButton.gameObject.SetActive(true);
+            }
             else
                 _okButton.gameObject.SetActive(false);
 

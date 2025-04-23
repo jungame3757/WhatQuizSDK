@@ -2,7 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Session{
+namespace UI.Session
+{
     public class GameModePanelToggle : MonoBehaviour
     {
         [SerializeField] private GameObject _blockPanel;

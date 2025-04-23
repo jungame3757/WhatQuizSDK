@@ -3,7 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Session{
+namespace UI.Session.Host
+{
     public class ValueController : MonoBehaviour
     {
         public int CurrentValue;

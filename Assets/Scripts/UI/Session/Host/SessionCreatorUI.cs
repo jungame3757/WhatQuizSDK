@@ -3,13 +3,14 @@ using UnityEngine.UI;
 using Firebase;
 using TMPro;
 using System;
-using UI.System;
+using UI.UISystem;
 
-namespace UI.Session{
+namespace UI.Session.Host
+{
     public class SessionCreatorUI : MonoBehaviour
     {
         [Header("Session Manager")]
-        [SerializeField] private SessionManager _sessionManager;
+        [SerializeField] private HostSessionManager _sessionManager;
     
         [Header("Session Creater")]
         [SerializeField] private ToggleGroup _gameModeToggleGroup;

@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace UI.System{
+namespace UI.UISystem
+{
     public class DebugManager : MonoBehaviour
     {
         public static DebugManager Instance;
@@ -21,14 +22,21 @@ namespace UI.System{
         [SerializeField] private GameObject _loadingPanel;
         [SerializeField] private MassageUIManager _massageUIManager;
 
+        private int _loadingCount = 0;
+
         public void ShowLoading()
         {
+            _loadingCount++;
             _loadingPanel.SetActive(true);
         }
 
         public void HideLoading()
         {
-            _loadingPanel.SetActive(false);
+            _loadingCount--;
+            if(_loadingCount <= 0)
+            {
+                _loadingPanel.SetActive(false);
+            }
         }
 
         public void ShowMassage(string title, string message = "", Action onOk = null, Action onClose = null)

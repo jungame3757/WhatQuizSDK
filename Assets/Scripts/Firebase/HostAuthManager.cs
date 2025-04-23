@@ -6,9 +6,9 @@ using FullSerializer;
 
 namespace Firebase
 {
-    public class AuthManager : MonoBehaviour
+    public class HostAuthManager : MonoBehaviour
     {
-        public static AuthManager Instance;
+        public static HostAuthManager Instance;
 
         public string idToken;
         private fsSerializer _serializer;
