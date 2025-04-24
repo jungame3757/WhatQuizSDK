@@ -267,7 +267,7 @@ namespace Session.Client
         {
             if (_waitingText != null)
             {
-                _waitingText.text = $"호스트의 게임 시작을 기다리는 중...\n(현재 {playerCount}명 참가 중)";
+                _waitingText.text = $"{_playerName}님\n참가완료!";
             }
         }
         
